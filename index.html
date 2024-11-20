@@ -114,6 +114,10 @@
 
         let orePrice = 0;
 
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         async function fetchOREPrice() {
             try {
                 const response = await fetch('https://price.jup.ag/v4/price?ids=oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp');
@@ -125,15 +129,22 @@
             }
         }
 
-        async function fetchWalletData(wallet) {
-            try {
-                const response = await fetch(`https://domainexpansion.tech/miner/rewards?pubkey=${wallet.pubkey}`);
-                const balance = await response.json();
-                return { name: wallet.name, balance: parseFloat(balance) || 0 };
-            } catch (error) {
-                console.error(`Error fetching data for wallet ${wallet.pubkey}:`, error);
-                return { name: wallet.name, balance: 0 };
+        async function fetchWalletBalance(wallet) {
+            let balance = 0;
+            while (balance === 0) {
+                try {
+                    const response = await fetch(`https://domainexpansion.tech/miner/rewards?pubkey=${wallet.pubkey}`);
+                    balance = parseFloat(await response.json()) || 0;
+                    if (balance === 0) {
+                        console.log(`Balance 0 untuk wallet ${wallet.name}, menunggu 10 detik sebelum mencoba lagi...`);
+                        await delay(10000); // Delay 10 detik
+                    }
+                } catch (error) {
+                    console.error(`Error fetching data for wallet ${wallet.pubkey}:`, error);
+                    await delay(10000); // Delay jika ada error
+                }
             }
+            return { name: wallet.name, balance };
         }
 
         async function loadWallets() {
@@ -141,7 +152,7 @@
             walletsTable.innerHTML = ''; // Clear table
             let totalBalance = 0;
 
-            const walletData = await Promise.all(wallets.map(fetchWalletData));
+            const walletData = await Promise.all(wallets.map(fetchWalletBalance));
 
             walletData
                 .sort((a, b) => parseInt(a.name) - parseInt(b.name)) // Sort by wallet name
@@ -164,7 +175,7 @@
         setInterval(() => {
             fetchOREPrice();
             loadWallets();
-        }, 60000); // Update every 1 minute
+        }, 60000); // Update every 1 menit
     </script>
 </body>
 </html>
