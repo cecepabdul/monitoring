@@ -54,9 +54,7 @@
     </style>
 </head>
 <body>
-
     <div class="container">
-    
         <div class="stat-item" id="orePrice">💲 Price ORE: $0.00 / ORE</div>
         <div class="stat-item total" id="unclaimed1Hour">✨ 1 hour: 0 ORE</div>
         <div class="stat-item total" id="unclaimed12Hour">✨ 12 hour: 0 ORE</div>
@@ -77,324 +75,76 @@
                 <!-- Data Wallet akan dimasukkan di sini -->
             </tbody>
         </table>
-
-
-        <footer class="last-check">
- 
-        </footer>
+        <footer class="last-check"></footer>
     </div>
 
     <script>
-                const wallets = [
-    { name: '1', pubkey: '5jYfC6sjivRRWHq89xVunhFpsrHsVPQUEexaKrf3Tf2j' },
-    { name: '2', pubkey: '76HYimxDFGmDwXyjWPq3eo5DrhEAcBMhuR1PEFrv7DtK' },
-    { name: '3', pubkey: 'DX2u99sizAWnLj22gGaCinbBBequ9ELoCjNN8X2WBxoJ' },
-    { name: '4', pubkey: 'Fx5NgxL8PmCXBqVHkqsfkTsrcgnBz5KtkjzP19AfXNoU' },
-    { name: '5', pubkey: '7o4P8SnDXJmcy4d6YZM63YPuCjUZSZCBRhiybP6LpQ1' },
-    { name: '6', pubkey: '5PRRBS7qDLS5x5gJeQZRtF3NW7RPstNPzQPnGk6MTNqJ' },
-    { name: '7', pubkey: 'E3gw4NDKfpy36mwcru1rfbfnGUDajYR71Fm9uykNrvDY' },
-    { name: '8', pubkey: 'DdLscoeVtaqpDEJGHTvWS2q3Ku4dU7ofPnNXUmVq2D1u' },
-    { name: '9', pubkey: 'GnbvHrAcVb6aMmn4bFrqbmr6XzryYWsZp6SbfNHZU75Y' },
-    { name: '10', pubkey: 'A8pVsHoqjWHUFa9oUkXdFVv35CH85BajmbMiF3vPi7XT' },
-    { name: '11', pubkey: 'FEj1LJT5Br1RLPbj9wsAdYRSpzj9xYfgct2kUSKHQUA1' },
-    { name: '12', pubkey: 'Fbp7Gcf8vnEpjpLdbSxBadt7NUw9Ma1jjuWobYDXWFQj' },
-    { name: '13', pubkey: '3nPdEhdVyFrXLqaWWpuEkCJSyoFd5fUUG7FvW8B37zww' },
-    { name: '14', pubkey: 'HURMyswdFkeUbxhtVA89tRwHK8awcTajtiRvgD3wzU9K' },
-    { name: '15', pubkey: '7qbWdBzTLwaRXZGqKhcFpj66jPjusmpADyvAef85bZ4h' }
+        const wallets = [
+            { name: '1', pubkey: '5jYfC6sjivRRWHq89xVunhFpsrHsVPQUEexaKrf3Tf2j' },
+            { name: '2', pubkey: '76HYimxDFGmDwXyjWPq3eo5DrhEAcBMhuR1PEFrv7DtK' },
+            { name: '3', pubkey: 'DX2u99sizAWnLj22gGaCinbBBequ9ELoCjNN8X2WBxoJ' },
+            { name: '4', pubkey: 'Fx5NgxL8PmCXBqVHkqsfkTsrcgnBz5KtkjzP19AfXNoU' },
+            { name: '5', pubkey: '7o4P8SnDXJmcy4d6YZM63YPuCjUZSZCBRhiybP6LpQ1' },
+            { name: '6', pubkey: '5PRRBS7qDLS5x5gJeQZRtF3NW7RPstNPzQPnGk6MTNqJ' },
+            { name: '7', pubkey: 'E3gw4NDKfpy36mwcru1rfbfnGUDajYR71Fm9uykNrvDY' },
+            { name: '8', pubkey: 'DdLscoeVtaqpDEJGHTvWS2q3Ku4dU7ofPnNXUmVq2D1u' },
+            { name: '9', pubkey: 'GnbvHrAcVb6aMmn4bFrqbmr6XzryYWsZp6SbfNHZU75Y' },
+            { name: '10', pubkey: 'A8pVsHoqjWHUFa9oUkXdFVv35CH85BajmbMiF3vPi7XT' }
         ];
 
-        let totalBalance = 0;
         let orePrice = 0;
-        const balanceHistory = {};
 
-        function fetchOREPrice() {
-            return fetch('https://price.jup.ag/v4/price?ids=oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp')
-                .then(response => response.json())
-                .then(data => {
-                    orePrice = data.data.oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp.price;
-                    document.getElementById('orePrice').textContent = `💲 Price ORE: $${orePrice.toFixed(2)} / ORE`;
-                })
-                .catch(error => {
-                    console.error('Error fetching ORE price:', error);
-                });
-        }
-
-        function fetchData(pubkey) {
-            return fetch(`https://domainexpansion.tech/miner/rewards?pubkey=${pubkey}`)
-                .then(response => response.json())
-                .then(data => {
-                    return parseFloat(data) || 0;
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    return 0;
-                });
-        }
-
-        function updateSlidingWindow(pubkey, currentBalance, timeLimit) {
-            const currentTime = Date.now();
-
-            // Jika belum ada data untuk wallet ini, inisialisasi
-            if (!balanceHistory[pubkey]) {
-                balanceHistory[pubkey] = [{ balance: currentBalance, time: currentTime }];
-                return 0;
+        async function fetchOREPrice() {
+            try {
+                const response = await fetch('https://price.jup.ag/v4/price?ids=oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp');
+                const data = await response.json();
+                orePrice = data.data.oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp.price;
+                document.getElementById('orePrice').textContent = `💲 Price ORE: $${orePrice.toFixed(2)} / ORE`;
+            } catch (error) {
+                console.error('Error fetching ORE price:', error);
             }
-
-            // Filter data agar hanya menyimpan data dalam rentang waktu yang diinginkan
-            balanceHistory[pubkey] = balanceHistory[pubkey].filter(entry => {
-                const timeDifference = (currentTime - entry.time) / (1000 * 60 * 60); // hitung perbedaan dalam jam
-                return timeDifference <= timeLimit;
-            });
-
-            // Tambahkan entri baru untuk saldo terbaru
-            balanceHistory[pubkey].push({ balance: currentBalance, time: currentTime });
-
-            // Hitung perubahan saldo selama timeLimit terakhir
-            const oldestEntry = balanceHistory[pubkey][0];
-            const unclaimedBalance = currentBalance - oldestEntry.balance;
-            return unclaimedBalance > 0 ? unclaimedBalance : 0;
         }
 
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            const formattedTime = now.toLocaleString('id-ID', options);
-            document.getElementById('lastUpdate').textContent = `🕒 Last check: ${formattedTime} (UTC+7)`;
-        }
-
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORE UNCLAIMED</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #030303;
-            padding: 20px;
-            color: #ffffff;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #201e1c;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 0px solid #ddd;
-        }
-        th {
-            background-color: #333;
-            color: #3498db;
-        }
-        .stat-item {
-            padding: 10px 0;
-            color: #ff5722;
-        }
-        .total {
-            font-weight: bold;
-            color: #28a745;
-        }
-        .last-check {
-            font-size: 0.9rem;
-            color: #ffffff;
-            text-align: center;
-            margin-top: 20px;
-        }
-        h2 {
-            text-align: center;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-    
-        <div class="stat-item" id="orePrice">💲 Price ORE: $0.00 / ORE</div>
-        <div class="stat-item total" id="unclaimed1Hour">✨ 1 hour: 0 ORE</div>
-        <div class="stat-item total" id="unclaimed12Hour">✨ 12 hour: 0 ORE</div>
-        <div class="stat-item total" id="unclaimed24Hour">✨ 24 hour: 0 ORE</div>
-        <div class="stat-item total" id="totalBalance">📈 Total unclaimed: 0 ORE</div>
-        <div class="stat-item total" id="totalUSD">💰 Total unclaimed in USD: $0.00</div>
-        <div id="lastUpdate">🕒 Last check: --</div>
-        <br>
-        <table>
-            <thead>
-                <tr>
-                    <th>Wallet</th>
-                    <th>Balance (ORE)</th>
-                    <th>Balance (USD)</th>
-                </tr>
-            </thead>
-            <tbody id="walletsTable">
-                <!-- Data Wallet akan dimasukkan di sini -->
-            </tbody>
-        </table>
-
-
-        <footer class="last-check">
- 
-        </footer>
-    </div>
-
-    <script>
-                const wallets = [
-    { name: '1', pubkey: '5jYfC6sjivRRWHq89xVunhFpsrHsVPQUEexaKrf3Tf2j' },
-    { name: '2', pubkey: '76HYimxDFGmDwXyjWPq3eo5DrhEAcBMhuR1PEFrv7DtK' },
-    { name: '3', pubkey: 'DX2u99sizAWnLj22gGaCinbBBequ9ELoCjNN8X2WBxoJ' },
-    { name: '4', pubkey: 'Fx5NgxL8PmCXBqVHkqsfkTsrcgnBz5KtkjzP19AfXNoU' },
-    { name: '5', pubkey: '7o4P8SnDXJmcy4d6YZM63YPuCjUZSZCBRhiybP6LpQ1' },
-    { name: '6', pubkey: '5PRRBS7qDLS5x5gJeQZRtF3NW7RPstNPzQPnGk6MTNqJ' },
-    { name: '7', pubkey: 'E3gw4NDKfpy36mwcru1rfbfnGUDajYR71Fm9uykNrvDY' },
-    { name: '8', pubkey: 'DdLscoeVtaqpDEJGHTvWS2q3Ku4dU7ofPnNXUmVq2D1u' },
-    { name: '9', pubkey: 'GnbvHrAcVb6aMmn4bFrqbmr6XzryYWsZp6SbfNHZU75Y' },
-    { name: '10', pubkey: 'A8pVsHoqjWHUFa9oUkXdFVv35CH85BajmbMiF3vPi7XT' },
-    { name: '11', pubkey: 'FEj1LJT5Br1RLPbj9wsAdYRSpzj9xYfgct2kUSKHQUA1' },
-    { name: '12', pubkey: 'Fbp7Gcf8vnEpjpLdbSxBadt7NUw9Ma1jjuWobYDXWFQj' },
-    { name: '13', pubkey: '3nPdEhdVyFrXLqaWWpuEkCJSyoFd5fUUG7FvW8B37zww' },
-    { name: '14', pubkey: 'HURMyswdFkeUbxhtVA89tRwHK8awcTajtiRvgD3wzU9K' },
-    { name: '15', pubkey: '7qbWdBzTLwaRXZGqKhcFpj66jPjusmpADyvAef85bZ4h' }
-        ];
-
-        let totalBalance = 0;
-        let orePrice = 0;
-        const balanceHistory = {};
-
-        function fetchOREPrice() {
-            return fetch('https://price.jup.ag/v4/price?ids=oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp')
-                .then(response => response.json())
-                .then(data => {
-                    orePrice = data.data.oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp.price;
-                    document.getElementById('orePrice').textContent = `💲 Price ORE: $${orePrice.toFixed(2)} / ORE`;
-                })
-                .catch(error => {
-                    console.error('Error fetching ORE price:', error);
-                });
-        }
-
-        function fetchData(pubkey) {
-            return fetch(`https://domainexpansion.tech/miner/rewards?pubkey=${pubkey}`)
-                .then(response => response.json())
-                .then(data => {
-                    return parseFloat(data) || 0;
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    return 0;
-                });
-        }
-
-        function updateSlidingWindow(pubkey, currentBalance, timeLimit) {
-            const currentTime = Date.now();
-
-            // Jika belum ada data untuk wallet ini, inisialisasi
-            if (!balanceHistory[pubkey]) {
-                balanceHistory[pubkey] = [{ balance: currentBalance, time: currentTime }];
-                return 0;
+        async function fetchWalletData(wallet) {
+            try {
+                const response = await fetch(`https://domainexpansion.tech/miner/rewards?pubkey=${wallet.pubkey}`);
+                const balance = await response.json();
+                return { name: wallet.name, balance: parseFloat(balance) || 0 };
+            } catch (error) {
+                console.error(`Error fetching data for wallet ${wallet.pubkey}:`, error);
+                return { name: wallet.name, balance: 0 };
             }
-
-            // Filter data agar hanya menyimpan data dalam rentang waktu yang diinginkan
-            balanceHistory[pubkey] = balanceHistory[pubkey].filter(entry => {
-                const timeDifference = (currentTime - entry.time) / (1000 * 60 * 60); // hitung perbedaan dalam jam
-                return timeDifference <= timeLimit;
-            });
-
-            // Tambahkan entri baru untuk saldo terbaru
-            balanceHistory[pubkey].push({ balance: currentBalance, time: currentTime });
-
-            // Hitung perubahan saldo selama timeLimit terakhir
-            const oldestEntry = balanceHistory[pubkey][0];
-            const unclaimedBalance = currentBalance - oldestEntry.balance;
-            return unclaimedBalance > 0 ? unclaimedBalance : 0;
         }
 
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            const formattedTime = now.toLocaleString('id-ID', options);
-            document.getElementById('lastUpdate').textContent = `🕒 Last check: ${formattedTime} (UTC+7)`;
-        }
-
-            function loadWallets() {
+        async function loadWallets() {
             const walletsTable = document.getElementById('walletsTable');
-            const unclaimed1HourElement = document.getElementById('unclaimed1Hour');
-            const unclaimed12HourElement = document.getElementById('unclaimed12Hour');
-            const unclaimed24HourElement = document.getElementById('unclaimed24Hour');
-            const totalBalanceElement = document.getElementById('totalBalance');
-            const totalUSDElement = document.getElementById('totalUSD');
-        
-            let unclaimed1HourTotal = 0;
-            let unclaimed12HourTotal = 0;
-            let unclaimed24HourTotal = 0;
-            totalBalance = 0;
-        
-            walletsTable.innerHTML = ''; // Bersihkan baris tabel yang ada
-        
-            // Urutkan wallets berdasarkan 'name'
-            const sortedWallets = wallets.sort((a, b) => parseInt(a.name) - parseInt(b.name));
-        
-            const promises = sortedWallets.map(wallet => {
-                return fetchData(wallet.pubkey).then(balance => {
-                    totalBalance += balance;
-        
-                    const unclaimed1Hour = updateSlidingWindow(wallet.pubkey, balance, 1);
-                    const unclaimed12Hour = updateSlidingWindow(wallet.pubkey, balance, 12);
-                    const unclaimed24Hour = updateSlidingWindow(wallet.pubkey, balance, 24);
-        
-                    unclaimed1HourTotal += unclaimed1Hour;
-                    unclaimed12HourTotal += unclaimed12Hour;
-                    unclaimed24HourTotal += unclaimed24Hour;
-        
-                    // Menambahkan baris ke tabel
+            walletsTable.innerHTML = ''; // Clear table
+            let totalBalance = 0;
+
+            const walletData = await Promise.all(wallets.map(fetchWalletData));
+
+            walletData
+                .sort((a, b) => parseInt(a.name) - parseInt(b.name)) // Sort by wallet name
+                .forEach(wallet => {
+                    totalBalance += wallet.balance;
                     const row = `<tr>
-                                    <td>${wallet.name}</td>
-                                    <td>${balance.toFixed(8)}</td>
-                                    <td>${(balance * orePrice).toFixed(2)}</td>
-                                 </tr>`;
+                        <td>${wallet.name}</td>
+                        <td>${wallet.balance.toFixed(8)}</td>
+                        <td>${(wallet.balance * orePrice).toFixed(2)}</td>
+                    </tr>`;
                     walletsTable.innerHTML += row;
-        
-                    return balance;
                 });
-            });
-        
-            Promise.all(promises).then(() => {
-                totalUSDElement.textContent = `💰 Total unclaimed in USD: $${(totalBalance * orePrice).toFixed(2)}`;
-                unclaimed1HourElement.textContent = `✨ unclaimed 1 hour: ${unclaimed1HourTotal.toFixed(8)} ORE`;
-                unclaimed12HourElement.textContent = `✨ unclaimed 12 hour: ${unclaimed12HourTotal.toFixed(8)} ORE`;
-                unclaimed24HourElement.textContent = `✨ unclaimed 24 hour: ${unclaimed24HourTotal.toFixed(8)} ORE`;
-                totalBalanceElement.textContent = `📈 Total unclaimed: ${totalBalance.toFixed(8)} ORE`;
-                updateLastUpdateTime();
-            });
+
+            document.getElementById('totalBalance').textContent = `📈 Total unclaimed: ${totalBalance.toFixed(8)} ORE`;
+            document.getElementById('totalUSD').textContent = `💰 Total unclaimed in USD: $${(totalBalance * orePrice).toFixed(2)}`;
         }
 
-
         fetchOREPrice();
         loadWallets();
         setInterval(() => {
             fetchOREPrice();
             loadWallets();
-        }, 60 * 10000); // Update setiap 1 menit
-    </script>
-</body>
-</html>
-
-        fetchOREPrice();
-        loadWallets();
-        setInterval(() => {
-            fetchOREPrice();
-            loadWallets();
-        }, 60 * 10000); // Update setiap 1 menit
+        }, 60000); // Update every 1 minute
     </script>
 </body>
 </html>
